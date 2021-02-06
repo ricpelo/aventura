@@ -1,0 +1,856 @@
+!% -~S
+!% -G
+!% +language_name=Spanish
+!% $MAX_STATIC_DATA=25000
+!% $MAX_PROP_TABLE_SIZE=63840
+!% $MAX_VERBS=200
+!% $MAX_ZCODE_SIZE=45000
+!% $MAX_VERBSPACE=4500
+
+!
+! AVENTURA
+!
+! Copyright (c) 2021 Ricardo Pérez López (Alpha Aventuras)
+!
+
+! This program is free software: you can redistribute it and/or modify
+! it under the terms of the GNU General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License
+! along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+!===============================================================================
+! (1) Constantes; Variables Globales; Replaces; Propertys; Incluir Parser.h
+!-------------------------------------------------------------------------------
+
+
+! ====================================================================
+! CONSTANTES
+! ====================================================================
+
+
+Constant Story "@<<AVENTURA@>>";
+Constant Headline "^(c) 2021 Ricardo Pérez^^";
+Release 1;
+
+! Queremos usar el comando 'Salidas'
+Constant ADMITIR_COMANDO_SALIDAS;
+
+! No queremos usar los comandos 'Lugares' y 'Objetos'
+Constant NO_PLACES;
+
+! No queremos usar puntuación
+Constant NO_SCORE;
+
+! Queremos que se muestren las deducciones del parser
+!Constant IMPRIMIR_DEDUCCIONES;
+
+! Hay curiosidades al final del juego
+!Constant AMUSING_PROVIDED;
+
+! Al acabar una partida (con éxito o fracaso) te da la opción de UNDO:
+Constant DEATH_MENTION_UNDO;
+
+! No queremos marcos en las cajas hechas con el comando box:
+Constant GBOXQUOTE_NOFRAME;
+
+! Se pone a true y false en la rutina PermitirEmpujarDir, y luego se consulta en
+! MensajesLibreria:
+Global estoyEmpujando = false;
+
+! Si se ha activado el listado automático de salidas:
+Global mostrarSalidas = true;
+
+
+! ====================================================================
+! VARIABLES GLOBALES
+! ====================================================================
+
+
+! ====================================================================
+! REPLACES
+! ====================================================================
+
+
+Replace Box__Routine;
+Replace DrawStatusLine;
+Replace LanguageDirection;
+Replace QuitarAcentos;
+Replace StatusLineHeight;
+
+
+! ====================================================================
+! PROPERTIES
+! ====================================================================
+
+
+! ====================================================================
+! INCLUIR "Parser.h"
+! ====================================================================
+
+
+Include "Parser";
+
+
+!===============================================================================
+! (2) Puntos de Entrada para Glk [solo en Glulx]:
+!     -  HandleGlkEvent(), IdentifyGlkObject(), InitGlkWindow()
+!-------------------------------------------------------------------------------
+
+
+!===============================================================================
+! (3) Modificar Mensajes de la Libreria; Otros Includes; Incluir VerbLib.h
+!-------------------------------------------------------------------------------
+
+
+[ quieres_ x;
+  if (player provides persona) {
+    switch (player.persona) {
+      PRIMERA_PERSONA,
+      PRIMERA_PERSONA_SINGULAR: print "quiero";
+      SEGUNDA_PERSONA,
+      SEGUNDA_PERSONA_SINGULAR: print "quieres";
+      TERCERA_PERSONA,
+      TERCERA_PERSONA_SINGULAR: print "quiere";
+      PRIMERA_PERSONA_PLURAL:   print "queremos";
+      SEGUNDA_PERSONA_PLURAL:   print "queréis";
+      TERCERA_PERSONA_PLURAL:   print "quieren";
+      default:                  print "quieres";
+    }
+  } else print "quieres";
+  print (string) x;
+];
+
+
+Object LibraryMessages
+  with
+    mostrar_nombre [ l;
+      l = LugarReal().(lm_o.door_dir);
+      if (l == nothing) print (the) lm_o;
+      else              MostrarNombreLink(l);
+    ],
+    before [;
+      Look:
+        switch (lm_n) {
+!          5, 6: new_line;
+!                if (lm_o ~= location) {
+!                  if (lm_o has supporter) print "Sobre ";
+!                  else                    print "En ";
+!                  print (the) lm_o;
+!                  print " ", (puedes_) " ver ";
+!                } else print "", (_Puedes_) " ver ";
+!
+!                if (n == 5) print "también ";
+!                WriteListFrom(child(lm_o),
+!                              ENGLISH_BIT + WORKFLAG_BIT + RECURSE_BIT +
+!                              TERSE_BIT + CONCEAL_BIT); ! Quitamos PARTINV_BIT
+!                if (lm_o ~= location) ".";
+!                ".";
+
+          7: print "No observ", (as_) " nada digno de mención al mirar hacia ";
+             self.mostrar_nombre();
+             ".";
+        }
+
+      Open:
+        switch (lm_n) {
+          5: if (lm_o has door && lm_o.door_to()) {
+               print "Abres ", (the) lm_o;
+               if (lm_o.door_to() has visited) {
+                 ", lo que te da acceso ", (al) lm_o.door_to(), ".";
+               } else {
+                 ".";
+               }
+             }
+        }
+
+      Prompt: print (s_input) "> ";
+
+      Go:
+        switch (lm_n) {
+          2: if (estoyEmpujando)
+               "^No ", (puedes_) " seguir empujando porque no hay salida
+               hacia ", (the) noun, ".";
+             if (noun == in_obj)
+               "No v", (eo_) " ningún sitio en el que ", (pueda_) " entrar.";
+             "No ", (puedes_) " ir por ahí, porque no hay salida hacia ",
+              (the) noun, ".";
+          5: if (estoyEmpujando) {
+               print "^No ", (puedes_) " empujar nada a través ";
+             } else {
+               print "No ", (puedes_) " pasar a través ";
+             }
+             print_ret (del) lm_o, ".";
+        }
+
+      Take:
+        if (lm_n == 1) {
+          print "Reco";
+          if (player.persona == PRIMERA_PERSONA_SINGULAR) print "j";
+          else                                            print "g";
+          print (es_) " ";
+          if (noun has moved) print (the) noun;
+          else                print (a) noun;
+          ".";
+        }
+
+      Drop:
+        if (lm_n == 4) "Dej", (as_) " ", (the) lm_o, ".";
+
+      Remove:
+        if (lm_n == 3) {
+          if (verb_word == 'quita') {
+            "Quit", (as_) " ", (the) lm_o, " ", (del) second, ".";
+          } else {
+            "Sac", (as_) " ",  (the) lm_o, " ", (del) second, ".";
+          }
+        }
+
+      GetOff:
+        print "Pero si no est", (oy_) " en ";
+        if (lm_o ofclass Lugar) MostrarNombreLink(lm_o);
+        else                    print (the) lm_o;
+        "...";
+
+      Exit:
+        if (lm_n == 1) {
+          "Si ", (quieres_) " moverte, indica hacia dónde quieres ir.";
+        }
+
+      Miscellany:
+        switch (lm_n) {
+           4: print " ¡Enhorabuena! Has acabado la aventura ";
+              rtrue;
+          10: rtrue;
+          13: "[Retrocediendo al turno anterior.]";
+          17: switch (random(4)) {
+                1: "Está muy oscuro y no puedes ver nada.";
+                2: "Todo está demasiado oscuro y no aprecias nada con
+                    claridad.";
+                3: "La oscuridad te impide ver dónde te encuentras.";
+                4: "Te mueves a tientas a través de una oscuridad que te impide
+                    ver nada.";
+              }
+          19: "Has tenido días mejores...";
+          30: switch (random(3)) {
+                1: "No encuentro eso que dices.";
+                2: "No veo nada parecido por aquí.";
+                3: "Parece que no hay nada de eso.";
+              };
+          27: "Las palabras se te agolpan en los labios.";
+          38: switch (random(5)) {
+                1: "¿Qué quieres decir con eso?";
+                2: "Lo siento, no te entiendo.";
+                3: "Intenta ser un poco más preciso.";
+                4: "No comprendo eso que dices.";
+                5: "¿Qué intentas decir?";
+              }
+          39: ! Cuando el jugador intenta llevar a cabo una acción usando una
+              ! palabra que está en la lista de nombres de la localidad actual:
+              switch (action_to_be) {
+                ##Examine:  PrintOrRun(location, description);
+                ##Enter:    "Ya estás aquí.";
+                ##SalirPor: <<Exit>>; ! SALIR DEL PASILLO estando en el pasillo
+                default:    "Debes ser más específico.";
+              }
+              rtrue;
+        }
+    ];
+
+
+!Include "aventura.bli";    ! Los recursos multimedia de la aventura
+Include "BetaTest";         ! Modo betatesting
+
+Include "VerbLib";
+
+Include "InfGlk_NG";
+Include "Contenedor";       ! Contenedores
+Include "EscenarioAbrible"; ! Escenario que se puede abrir y cerrar
+!Include "EventList_NG";     ! Listas de mensajes
+!Include "ExaminarFalso";    ! Poder examinar objetos sólo con su nombre
+Include "GlulxBox";         ! Usar el comando box con Glulx - gracias a Eliuk
+Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
+
+
+!===============================================================================
+! (4) Rutina Initialise()
+!-------------------------------------------------------------------------------
+
+
+[ Initialise;
+!  location = thedark;
+!  dibujarEstado = false;
+
+  ! Esto es para que el juego dé siempre la descripción de la habitación, aunque
+  ! ya la hayamos visitado
+  lookmode = 2;
+
+  ! Inventario en una sola frase:
+  inventory_style = ENGLISH_BIT + RECURSE_BIT + FULLINV_BIT;
+
+  ! Parseado estricto (de la librería IntNombre):
+  parseado_estricto = 1;
+
+  ! Nombre de la oscuridad
+  thedark.short_name = "Oscuridad";
+
+  ! Localización donde comienza el jugador
+  location = cuarto_katie;
+
+!  AsignarPersona(PRIMERA_PERSONA + PERSONA_SINGULAR);
+!  give player female;
+
+!  clearTextWindow();
+];
+
+
+!===============================================================================
+! (5) Rutinas de la Libreria Implementadas, Reemplazadas o Ampliadas
+!-------------------------------------------------------------------------------
+
+
+[ Amusing;
+  rfalse;
+];
+
+
+[ DrawStatusLine
+  pos;
+  if (gg_statuswin == 0) rfalse;
+  glk_set_window(gg_statuswin);
+  StatusLineHeight(1);
+  glk_window_clear(gg_statuswin);
+  glk_window_move_cursor(gg_statuswin, 0, 0);
+  glk_set_style(style_SubHeader);
+  print (name) location;
+  if (turns < 10)         pos = 1;
+  else if (turns < 100)   pos = 2;
+  else if (turns < 1000)  pos = 3;
+  else if (turns < 10000) pos = 4;
+  else                    pos = 5;
+  glk_window_get_size(gg_statuswin, gg_arguments,
+                      gg_arguments + WORDSIZE);
+  pos = gg_arguments-->0 - pos - 10;
+  glk_window_move_cursor(gg_statuswin, pos, 0);
+  print "| Turnos: ", turns;
+  glk_set_window(gg_mainwin);
+];
+
+
+! Usado sólo en LanguageDirection para ahorrar código:
+[ LanguageDirectionAux obj text;
+  glk_set_hyperlink(obj);
+  print (string) text;
+  glk_set_hyperlink(0);
+];
+
+
+! Esta versión  muestra los puntos cardinales y también los lugares a los que
+! se llega por esa dirección:
+[ LanguageDirection d
+  l par dest puerta;
+  par = true;
+  switch (d) {
+    n_to:    print "al "; LanguageDirectionAux(n_obj, "norte");
+    s_to:    print "al "; LanguageDirectionAux(s_obj, "sur");
+    e_to:    print "al "; LanguageDirectionAux(e_obj, "este");
+    w_to:    print "al "; LanguageDirectionAux(w_obj, "oeste");
+    ne_to:   print "al "; LanguageDirectionAux(ne_obj, "nordeste");
+    nw_to:   print "al "; LanguageDirectionAux(nw_obj, "noroeste");
+    se_to:   print "al "; LanguageDirectionAux(se_obj, "sudeste");
+    sw_to:   print "al "; LanguageDirectionAux(sw_obj, "suroeste");
+    u_to:    print "hacia "; LanguageDirectionAux(u_obj, "arriba");
+    d_to:    print "hacia "; LanguageDirectionAux(d_obj, "abajo");
+    in_to:   print "hacia "; LanguageDirectionAux(in_obj, "dentro");
+    out_to:  print "hacia "; LanguageDirectionAux(out_obj, "fuera");
+    default: return RunTimeError(9, d);
+  }
+  l = LugarReal();
+  dest = l.d;
+
+  if (dest has door) {
+    puerta = dest;
+    dest = dest.d;
+    if (par) print " (";
+    if (dest has visited) {
+      MostrarNombreLink(dest);
+      print ", por ";
+      MostrarNombreLink(puerta);
+    } else {
+      print "por ";
+      MostrarNombreLink(puerta);
+    }
+    if (par) print ")";
+  } else if (dest has visited) {
+    if (par) print " (";
+    MostrarNombreLink(dest);
+    if (par) print ")";
+  }
+];
+
+
+! Modificado para que ?, !, ¿, ¡ se separen de las palabras al parsear:
+[ QuitarAcentos buf pars x i word at len;
+  Tokenise__(buf, pars);
+  for (x = 1: x <= tokenCount(pars): x++) { ! para cada token
+    word = tokenDict(pars,x); ! dictionary value of token 1,2,3...
+    at   = tokenPos(pars,x);  ! position in buffer of token 1,2,3...
+    len  = WordLength(x);     ! length in chars of token 1,2,3...
+
+    if (word == 0) { ! no comprendida
+      for (i = at: i < at + len: i++)
+        switch (buf->i) {
+          'á', 'à', 'ä', 'â': buf->i = 'a';
+          'é', 'è', 'ë', 'ê': buf->i = 'e';
+          'í', 'ì', 'ï', 'î': buf->i = 'i';
+          'ó', 'ò', 'ö', 'ô': buf->i = 'o';
+          'ú', 'ù', 'ü', 'û': buf->i = 'u';
+          'ñ': buf->i = 'n';
+          'ç': buf->i = 'c';
+          '?': buf->i = ' ';
+          '¿': buf->i = ' ';
+          '!': buf->i = ' ';
+          '¡': buf->i = ' ' ;
+        }
+      Tokenise__(buf, pars);
+    }
+  }
+];
+
+
+! Modificado para que no ponga un borde debajo de la línea de estado:
+[ StatusLineHeight hgt parwin;
+  if (gg_statuswin == 0) return;
+  parwin = glk($0029, gg_statuswin); ! window_get_parent
+  glk($0026, parwin, $112, hgt, 0); ! window_set_arrangement
+  gg_statuswin_cursize = hgt;
+];
+
+
+! Para el Examinar Falso:
+[ UnknownVerb;
+  verb_wordnum = 0;
+  return 'no.verb';
+];
+
+
+!===============================================================================
+! (6) Incluir SpanishG.h; Otros Includes
+!-------------------------------------------------------------------------------
+
+
+Include "SpanishG";
+
+Include "random";          ! Cambia la función random()
+
+
+!===============================================================================
+! (7) Clases del Juego
+!-------------------------------------------------------------------------------
+
+
+Class Lugar
+  with
+    describe [;
+      PrintOrRun(self, description);
+      if (mostrarSalidas) {
+        new_line;
+        glk_set_style(style_Emphasized);
+        <Salidas>;
+        glk_set_style(style_Normal);
+        rtrue;
+      }
+    ],
+    number,                           ! Necesario en varias librerías
+  has
+    scenery light;
+
+
+!===============================================================================
+! (8) Objetos del Juego
+!-------------------------------------------------------------------------------
+
+
+Object cuarto_katie;
+
+
+! ====================================================================
+! OBJETOS DE SOPORTE
+! ====================================================================
+
+
+!===============================================================================
+! (9) Otras Rutinas Reemplazadas; Rutinas Propias del Juego
+!-------------------------------------------------------------------------------
+
+
+#ifdef DEBUG;
+! En modo depuración podemos saltarnos la espera pulsando una tecla:
+[ WaitDelay delay;
+  return KeyDelay(delay);
+];
+#endif;
+
+
+! Imprime el artículo de un objeto o localidad:
+! - obj: el objeto o localidad en sí
+! - art: 0 = artículo definido
+!        1 = artículo indefinido
+!        0 = sin artículo
+! - cap: 0 = artículo en minúscula
+!        1 = artículo en mayúscula
+! - input: 0 = nombre_link tiene preferencia sobre input_link
+!          1 = input_link tiene preferencia sobre nombre_link
+[ ArticuloPrevio obj art cap;
+  if (obj has proper) rfalse;
+  switch (art) {
+    0: if (cap) PrefaceByArticle(obj, 0, -1);    ! CDefArt(obj);
+       else     PrefaceByArticle(obj, 1, -1);    ! DefArt(obj);
+    1: if (cap) PrefaceByArticle(obj, 2, -1, 1); ! CInDefArt(obj);
+       else     PrefaceByArticle(obj, 2, -1);    ! IndefArt(obj);
+  }
+];
+
+
+[ ComoHablar;
+  print_ret "[Para hablar con un personaje, usa la forma ~",
+            (s_input) "PERSONAJE, lo que sea", "~. Por ejemplo: ~",
+            (s_input) "JASON, QUÉ OPINAS DE MADRE", "~.]";
+];
+
+
+! Text in Emphasized style
+[ s_emph text;
+   #ifdef TARGET_GLULX;
+     glk_set_style(style_Emphasized);
+     print (string) text;
+     glk_set_style(style_Normal);
+   #ifnot; ! COMPILACION PARA MAQUINA Z
+     style bold;
+     print (string) text;
+     style roman;
+   #endif; ! TARGET_
+];
+
+
+! Text in Input style
+[ s_input text;
+   #ifdef TARGET_GLULX;
+     glk_set_style(style_Input);
+     print (string) text;
+     glk_set_style(style_Normal);
+   #ifnot; ! COMPILACION PARA MAQUINA Z
+     print (string) text;
+   #endif; ! TARGET_
+];
+
+
+! Text in Bold style (like Inform)
+[ s_bold text;
+    print (s_emph) text;
+];
+
+
+! Text in Preformatted style
+[ s_pref text;
+   #ifdef TARGET_GLULX;
+     glk_set_style(style_Preformatted);
+     print (string) text;
+     glk_set_style(style_Normal);
+   #ifnot; ! COMPILACION PARA MAQUINA Z
+     font off;
+     print (string) text;
+     font on;
+   #endif; ! TARGET_
+];
+
+
+! Text in Header style
+[ s_head text;
+   #ifdef TARGET_GLULX;
+     glk_set_style(style_Header);
+     print (string) text;
+     glk_set_style(style_Normal);
+   #ifnot; ! COMPILACION PARA MAQUINA Z
+     print (s_bold) text;
+   #endif; ! TARGET_
+];
+
+
+[ ImprimirPrompt;
+  if (player ~= selfobj) {
+    glk_set_style(style_User1);
+    print (string) player.short_name;
+    glk_set_style(style_Normal);
+    print " ";
+  }
+  print (s_input) "> ";
+];
+
+
+#ifndef LugarReal;
+[ LugarReal;
+  if (location == thedark) return real_location;
+  else                     return location;
+];
+#endif;
+
+
+! Muestra el nombre del objeto o localidad, con un hipervínculo asociado,
+! con artículo y teniendo preferencia nombre_link sobre input_link:
+! - cap: 0 = artículo en minúscula
+!        1 = artículo en mayúscula
+[ MostrarNombreLink obj cap;
+  ArticuloPrevio(obj, 0, cap);
+  glk_set_hyperlink(obj);
+  MostrarNombre(obj, 2);
+  glk_set_hyperlink(0);
+];
+
+
+! Imprime el nombre de un objeto o localidad:
+! - obj: el objeto o localidad en sí
+! - art: 0 = artículo definido
+!        1 = artículo indefinido
+!        2 = sin artículo
+! - cap: 0 = artículo en minúscula
+!        1 = artículo en mayúscula
+! - input: 0 = nombre_link tiene preferencia sobre input_link
+!          1 = input_link tiene preferencia sobre nombre_link
+[ MostrarNombre obj art cap input
+  ;
+  if (obj ofclass String) {
+    print (string) obj;
+  } else if (obj ofclass Routine) {
+    print (string) obj();
+  } else if (input && obj provides input_link) {
+    ArticuloPrevio(obj, art, cap); PrintOrRun(obj, input_link, 1);
+  } else if ((~~input) && obj provides input_link) {
+    ArticuloPrevio(obj, art, cap); PrintOrRun(obj, input_link, 1);
+  } else if (obj provides name) {
+    ArticuloPrevio(obj, art, cap); print (address) obj.&name-->0;
+  } else if (obj provides name_m) {
+    ArticuloPrevio(obj, art, cap); print (address) obj.&name_m-->0;
+  } else if (obj provides name_f) {
+    ArticuloPrevio(obj, art, cap); print (address) obj.&name_f-->0;
+  } else if (obj provides name_mp) {
+    ArticuloPrevio(obj, art, cap); print (address) obj.&name_mp-->0;
+  } else if (obj provides name_fp) {
+    ArticuloPrevio(obj, art, cap); print (address) obj.&name_fp-->0;
+  } else {
+    ArticuloPrevio(obj, art, cap); PrintAnything(obj);
+  }
+];
+
+
+!===============================================================================
+! (10) Verbos y Gramaticas Propias del Juego
+!-------------------------------------------------------------------------------
+
+
+Verb meta 'ayuda'
+  *                 -> Ayuda;
+
+Verb 'chilla' = 'grita';
+
+Verb meta 'creditos'
+  *                 -> Creditos;
+
+Verb 'cuentale' = 'cuenta';
+
+Extend 'di' first
+  * 'a//' creature            -> Answer;
+
+Extend only 'grita' replace
+  *                 -> Gritar
+  * 'a//' creature  -> Gritar;
+
+Extend 'habla' first
+  * 'con' creature topic     -> Tell
+  * 'con' creature           -> Tell
+  * 'a//' creature           -> Tell;
+
+Verb 'hola'
+  *                 -> Saludar;
+
+Verb 'llama'
+  *                 -> Llamar
+  * 'a//' noun      -> Llamar
+  * 'por' noun      -> LlamarPor;
+
+Verb 'preguntale' = 'pregunta';
+
+Extend 'pregunta' replace
+  * creature 'sobre'/'por' topic       -> Pregunta
+  * 'a//' creature                     -> Pregunta
+  * 'a//' creature 'sobre'/'por' topic -> Pregunta
+  * 'sobre'/'por' topic 'a//' creature -> Pregunta reverse
+  * topic 'a//' creature               -> Pregunta reverse
+  * 'a//' creature 'acerca' 'de' topic -> Pregunta;
+
+Extend only 'sal' 'salte' 'salirse' 'salirte'
+  * noun            -> SalirA
+  * 'a//' noun      -> SalirA;
+
+Extend 'sal'
+  * 'por' noun      -> SalirPor;
+
+Extend 'saluda' first
+  *                 -> Saludar;
+
+Verb 'sigue'
+  * creature               -> Seguir
+  * creature 'aqui'        -> Seguir
+  * 'a//' creature         -> Seguir
+  * 'a//' creature 'aqui'  -> Seguir;
+
+Verb 'vamonos' 'vayamonos'
+  *                  -> Venir
+  * 'de' 'aqui'      -> Venir;
+
+Verb 'vamos'
+  *                  -> Venir;
+
+Verb 'ven'
+  *                  -> Venir
+  * 'aqui'           -> Venir
+  * 'conmigo'        -> Venir;
+
+#ifdef DEBUG;
+Verb meta 't'
+  *                    -> TestPasoAPaso;
+
+Verb meta 'tt'
+  *                    -> TestContinuar;
+#endif;
+
+
+!===============================================================================
+! (11) Rutinas de Acciones Propias del Juego
+!-------------------------------------------------------------------------------
+
+
+[ AyudaSub;
+  print "Prueba a pedir ayuda a alguien. Si necesitas pistas más elaboradas,
+         puedes usar el sistema de pistas interactivas tecleando el comando ",
+         (s_input) "PISTAS", ".^";
+];
+
+
+[ CreditosSub;
+  print (s_head) "^@<<MOMENTUM@>>", " --- (c) 2012 Alpha Aventuras^^";
+  print (s_bold) "-- PROGRAMACIÓN Y DISEÑO:^";
+  print "    Ricardo Pérez López^^";
+  print (s_bold) "-- GRÁFICOS:^";
+  print "    Manuel Millán Ruiz^^";
+  print (s_bold) "-- TEXTOS:^";
+  print "    Ricardo Pérez López^^";
+  print (s_bold) "-- MAPEADO Y DOCUMENTACIÓN:^";
+  print "    Ricardo Pérez López^";
+  print "    Antonio Matiola Ortiz^^";
+  print (s_bold) "-- PRUEBAS:^";
+  print "    Ricardo Pérez López^";
+  print "    Manuel Millán Ruiz^^";
+  KeyDelay();
+  print "Desarrollado usando el lenguaje Inform, de Graham Nelson,
+         con ayuda de las siguientes librerías:^^";
+  print "- INFSP6 (fix), de Sarganar et al.^";
+  print "- Adaptación de SGW+DMX, de Eliuk Blau^";
+  print "- Damusix, de Eliuk Blau^";
+  print "- PNJactor_NG y PNJacciones_NG (adaptaciones de los originales de Zak
+           y Carlos)^";
+  print "- Moviles_NG (adaptación de Moviles, de Mel Hython)^";
+  print "- PNJpuertas_NG (Adaptación de PnjPuertas, de Jaevius)^";
+  print "- Decir, de Zak^";
+  print "- Etemas, de Zak^";
+  print "- Decorado_NG (adaptación de Decorado, de Zak y Mel Hython)^";
+  print "- Adaptación de Barra, de Presi^";
+  print "- Adaptación de ZIPI, de Zak^";
+  print "- Timer, de Sothoth";
+  KeyDelay();
+  print "^^Basado en la novela @<<Ringu@>> de Koji Suzuki y el film
+         @<<The Ring@>> (c) 2002 Dreamworks SKG.";
+  print "^^Nuestro agradecimiento a todos los integrantes del CAAD que nos han
+         ayudado, directa o indirectamente, en el desarrollo de esta aventura.^^
+         (c) 2012 Alpha Aventuras^^
+         Este programa es software libre, publicado bajo la licencia GNU GPL v3.
+         El texto completo de la licencia se encuentra en la siguiente
+         dirección:^^";
+  print (s_pref) "http://www.gnu.org/licenses/gpl.txt^";
+  print "^El código fuente del programa está disponible en Github:^^";
+  print (s_pref) "https://bitbucket.com/ricpelo/momentum^";
+  KeyDelay();
+  print "^Visítanos en:^^";
+  print (s_pref) "http://www.alpha-aventuras.es^
+        http://wiki.caad.es/Alpha_Aventuras^
+        http://www.facebook.com/alphaaventuras^";
+  KeyDelay();
+];
+
+
+[ GritarSub;
+  "Emites un sonoro grito, pero nadie responde.";
+];
+
+
+[ LlamarPorSub;
+  "Con eso no puedes llamar a ningún sitio.";
+];
+
+
+[ LlamarSub;
+  "¿Llamar a qué o a quién?";
+];
+
+
+[ PreguntaSub;
+  ComoHablar();
+];
+
+
+! Para poder poner "SALIR AL PASILLO", que sería lo mismo que "ENTRA EN EL
+! PASILLO".
+[ SalirASub;
+  print_ret (The) noun, " no es algo a donde puedas salir.";
+];
+
+
+[ SalirPorSub;
+  if (noun ofclass Lugar) <<Exit>>;
+  else                    <<Enter noun>>;
+];
+
+
+[ SaludarSub;
+  "Saludas cordialmente.";
+];
+
+
+[ SeguirSub;
+  "Decide por ti mism", (o) player, " a dónde deseas ir.";
+];
+
+
+[ VenirSub;
+  <<Seguir player>>;
+];
+
+
+#ifdef DEBUG;
+[ TestPasoAPasoSub;
+  test_machine.run_once();
+];
+
+
+[ TestContinuarSub;
+  test_machine.run();
+];
+#endif;
