@@ -12,11 +12,9 @@ System_file;
 class EscenarioAbrible
   with
     when_open [;
-      MostrarNombreLink(self, 1);
-      print " está abiert", (o) self, ".^"; rtrue; ],
+      print (_El) self, " está abiert", (o) self, ".^"; rtrue; ],
     when_closed [;
-      MostrarNombreLink(self, 1);
-      print " está cerrad", (o) self, ".^"; rtrue; ],
+      print (_El) self, " está cerrad", (o) self, ".^"; rtrue; ],
     ! Cuando está abierto, pasa de ser escenario a ser estático. Esto se hace
     ! para que se muestre cuando está abierto, usando la propiedad when_open.
     ! En realidad, la propiedad when_closed no se usa, porque cuando está

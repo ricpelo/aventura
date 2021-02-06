@@ -1,12 +1,3 @@
-!% -~S
-!% -G
-!% +language_name=Spanish
-!% $MAX_STATIC_DATA=25000
-!% $MAX_PROP_TABLE_SIZE=63840
-!% $MAX_VERBS=200
-!% $MAX_ZCODE_SIZE=45000
-!% $MAX_VERBSPACE=4500
-
 !
 ! AVENTURA
 !
@@ -59,12 +50,10 @@ Constant NO_SCORE;
 ! Al acabar una partida (con éxito o fracaso) te da la opción de UNDO:
 Constant DEATH_MENTION_UNDO;
 
+#ifdef TARGET_GLULX;
 ! No queremos marcos en las cajas hechas con el comando box:
 Constant GBOXQUOTE_NOFRAME;
-
-! Se pone a true y false en la rutina PermitirEmpujarDir, y luego se consulta en
-! MensajesLibreria:
-Global estoyEmpujando = false;
+#endif;
 
 ! Si se ha activado el listado automático de salidas:
 Global mostrarSalidas = true;
@@ -79,12 +68,12 @@ Global mostrarSalidas = true;
 ! REPLACES
 ! ====================================================================
 
-
+#ifdef TARGET_GLULX;
 Replace Box__Routine;
-Replace DrawStatusLine;
-Replace LanguageDirection;
-Replace QuitarAcentos;
 Replace StatusLineHeight;
+Replace DrawStatusLine;
+#endif;
+Replace QuitarAcentos;
 
 
 ! ====================================================================
@@ -111,172 +100,16 @@ Include "Parser";
 !-------------------------------------------------------------------------------
 
 
-[ quieres_ x;
-  if (player provides persona) {
-    switch (player.persona) {
-      PRIMERA_PERSONA,
-      PRIMERA_PERSONA_SINGULAR: print "quiero";
-      SEGUNDA_PERSONA,
-      SEGUNDA_PERSONA_SINGULAR: print "quieres";
-      TERCERA_PERSONA,
-      TERCERA_PERSONA_SINGULAR: print "quiere";
-      PRIMERA_PERSONA_PLURAL:   print "queremos";
-      SEGUNDA_PERSONA_PLURAL:   print "queréis";
-      TERCERA_PERSONA_PLURAL:   print "quieren";
-      default:                  print "quieres";
-    }
-  } else print "quieres";
-  print (string) x;
-];
-
-
-Object LibraryMessages
-  with
-    mostrar_nombre [ l;
-      l = LugarReal().(lm_o.door_dir);
-      if (l == nothing) print (the) lm_o;
-      else              MostrarNombreLink(l);
-    ],
-    before [;
-      Look:
-        switch (lm_n) {
-!          5, 6: new_line;
-!                if (lm_o ~= location) {
-!                  if (lm_o has supporter) print "Sobre ";
-!                  else                    print "En ";
-!                  print (the) lm_o;
-!                  print " ", (puedes_) " ver ";
-!                } else print "", (_Puedes_) " ver ";
-!
-!                if (n == 5) print "también ";
-!                WriteListFrom(child(lm_o),
-!                              ENGLISH_BIT + WORKFLAG_BIT + RECURSE_BIT +
-!                              TERSE_BIT + CONCEAL_BIT); ! Quitamos PARTINV_BIT
-!                if (lm_o ~= location) ".";
-!                ".";
-
-          7: print "No observ", (as_) " nada digno de mención al mirar hacia ";
-             self.mostrar_nombre();
-             ".";
-        }
-
-      Open:
-        switch (lm_n) {
-          5: if (lm_o has door && lm_o.door_to()) {
-               print "Abres ", (the) lm_o;
-               if (lm_o.door_to() has visited) {
-                 ", lo que te da acceso ", (al) lm_o.door_to(), ".";
-               } else {
-                 ".";
-               }
-             }
-        }
-
-      Prompt: print (s_input) "> ";
-
-      Go:
-        switch (lm_n) {
-          2: if (estoyEmpujando)
-               "^No ", (puedes_) " seguir empujando porque no hay salida
-               hacia ", (the) noun, ".";
-             if (noun == in_obj)
-               "No v", (eo_) " ningún sitio en el que ", (pueda_) " entrar.";
-             "No ", (puedes_) " ir por ahí, porque no hay salida hacia ",
-              (the) noun, ".";
-          5: if (estoyEmpujando) {
-               print "^No ", (puedes_) " empujar nada a través ";
-             } else {
-               print "No ", (puedes_) " pasar a través ";
-             }
-             print_ret (del) lm_o, ".";
-        }
-
-      Take:
-        if (lm_n == 1) {
-          print "Reco";
-          if (player.persona == PRIMERA_PERSONA_SINGULAR) print "j";
-          else                                            print "g";
-          print (es_) " ";
-          if (noun has moved) print (the) noun;
-          else                print (a) noun;
-          ".";
-        }
-
-      Drop:
-        if (lm_n == 4) "Dej", (as_) " ", (the) lm_o, ".";
-
-      Remove:
-        if (lm_n == 3) {
-          if (verb_word == 'quita') {
-            "Quit", (as_) " ", (the) lm_o, " ", (del) second, ".";
-          } else {
-            "Sac", (as_) " ",  (the) lm_o, " ", (del) second, ".";
-          }
-        }
-
-      GetOff:
-        print "Pero si no est", (oy_) " en ";
-        if (lm_o ofclass Lugar) MostrarNombreLink(lm_o);
-        else                    print (the) lm_o;
-        "...";
-
-      Exit:
-        if (lm_n == 1) {
-          "Si ", (quieres_) " moverte, indica hacia dónde quieres ir.";
-        }
-
-      Miscellany:
-        switch (lm_n) {
-           4: print " ¡Enhorabuena! Has acabado la aventura ";
-              rtrue;
-          10: rtrue;
-          13: "[Retrocediendo al turno anterior.]";
-          17: switch (random(4)) {
-                1: "Está muy oscuro y no puedes ver nada.";
-                2: "Todo está demasiado oscuro y no aprecias nada con
-                    claridad.";
-                3: "La oscuridad te impide ver dónde te encuentras.";
-                4: "Te mueves a tientas a través de una oscuridad que te impide
-                    ver nada.";
-              }
-          19: "Has tenido días mejores...";
-          30: switch (random(3)) {
-                1: "No encuentro eso que dices.";
-                2: "No veo nada parecido por aquí.";
-                3: "Parece que no hay nada de eso.";
-              };
-          27: "Las palabras se te agolpan en los labios.";
-          38: switch (random(5)) {
-                1: "¿Qué quieres decir con eso?";
-                2: "Lo siento, no te entiendo.";
-                3: "Intenta ser un poco más preciso.";
-                4: "No comprendo eso que dices.";
-                5: "¿Qué intentas decir?";
-              }
-          39: ! Cuando el jugador intenta llevar a cabo una acción usando una
-              ! palabra que está en la lista de nombres de la localidad actual:
-              switch (action_to_be) {
-                ##Examine:  PrintOrRun(location, description);
-                ##Enter:    "Ya estás aquí.";
-                ##SalirPor: <<Exit>>; ! SALIR DEL PASILLO estando en el pasillo
-                default:    "Debes ser más específico.";
-              }
-              rtrue;
-        }
-    ];
-
-
-!Include "aventura.bli";    ! Los recursos multimedia de la aventura
-Include "BetaTest";         ! Modo betatesting
-
 Include "VerbLib";
 
+#ifdef TARGET_GLULX;
 Include "InfGlk_NG";
+Include "GlulxBox";         ! Usar el comando box con Glulx - gracias a Eliuk
+#endif;
 Include "Contenedor";       ! Contenedores
 Include "EscenarioAbrible"; ! Escenario que se puede abrir y cerrar
 !Include "EventList_NG";     ! Listas de mensajes
 !Include "ExaminarFalso";    ! Poder examinar objetos sólo con su nombre
-Include "GlulxBox";         ! Usar el comando box con Glulx - gracias a Eliuk
 Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
 
 
@@ -322,6 +155,7 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
 ];
 
 
+#ifdef TARGET_GLULX;
 [ DrawStatusLine
   pos;
   if (gg_statuswin == 0) rfalse;
@@ -343,58 +177,7 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
   print "| Turnos: ", turns;
   glk_set_window(gg_mainwin);
 ];
-
-
-! Usado sólo en LanguageDirection para ahorrar código:
-[ LanguageDirectionAux obj text;
-  glk_set_hyperlink(obj);
-  print (string) text;
-  glk_set_hyperlink(0);
-];
-
-
-! Esta versión  muestra los puntos cardinales y también los lugares a los que
-! se llega por esa dirección:
-[ LanguageDirection d
-  l par dest puerta;
-  par = true;
-  switch (d) {
-    n_to:    print "al "; LanguageDirectionAux(n_obj, "norte");
-    s_to:    print "al "; LanguageDirectionAux(s_obj, "sur");
-    e_to:    print "al "; LanguageDirectionAux(e_obj, "este");
-    w_to:    print "al "; LanguageDirectionAux(w_obj, "oeste");
-    ne_to:   print "al "; LanguageDirectionAux(ne_obj, "nordeste");
-    nw_to:   print "al "; LanguageDirectionAux(nw_obj, "noroeste");
-    se_to:   print "al "; LanguageDirectionAux(se_obj, "sudeste");
-    sw_to:   print "al "; LanguageDirectionAux(sw_obj, "suroeste");
-    u_to:    print "hacia "; LanguageDirectionAux(u_obj, "arriba");
-    d_to:    print "hacia "; LanguageDirectionAux(d_obj, "abajo");
-    in_to:   print "hacia "; LanguageDirectionAux(in_obj, "dentro");
-    out_to:  print "hacia "; LanguageDirectionAux(out_obj, "fuera");
-    default: return RunTimeError(9, d);
-  }
-  l = LugarReal();
-  dest = l.d;
-
-  if (dest has door) {
-    puerta = dest;
-    dest = dest.d;
-    if (par) print " (";
-    if (dest has visited) {
-      MostrarNombreLink(dest);
-      print ", por ";
-      MostrarNombreLink(puerta);
-    } else {
-      print "por ";
-      MostrarNombreLink(puerta);
-    }
-    if (par) print ")";
-  } else if (dest has visited) {
-    if (par) print " (";
-    MostrarNombreLink(dest);
-    if (par) print ")";
-  }
-];
+#endif;
 
 
 ! Modificado para que ?, !, ¿, ¡ se separen de las palabras al parsear:
@@ -426,6 +209,7 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
 ];
 
 
+#ifdef TARGET_GLULX;
 ! Modificado para que no ponga un borde debajo de la línea de estado:
 [ StatusLineHeight hgt parwin;
   if (gg_statuswin == 0) return;
@@ -433,6 +217,7 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
   glk($0026, parwin, $112, hgt, 0); ! window_set_arrangement
   gg_statuswin_cursize = hgt;
 ];
+#endif;
 
 
 ! Para el Examinar Falso:
@@ -463,9 +248,17 @@ Class Lugar
       PrintOrRun(self, description);
       if (mostrarSalidas) {
         new_line;
-        glk_set_style(style_Emphasized);
+        #ifdef TARGET_GLULX;
+            glk_set_style(style_Emphasized);
+        #ifnot;
+            style bold;
+        #endif;
         <Salidas>;
-        glk_set_style(style_Normal);
+        #ifdef TARGET_GLULX;
+            glk_set_style(style_Normal);
+        #ifnot;
+            style roman;
+        #endif;
         rtrue;
       }
     ],
@@ -498,26 +291,6 @@ Object cuarto_katie;
   return KeyDelay(delay);
 ];
 #endif;
-
-
-! Imprime el artículo de un objeto o localidad:
-! - obj: el objeto o localidad en sí
-! - art: 0 = artículo definido
-!        1 = artículo indefinido
-!        0 = sin artículo
-! - cap: 0 = artículo en minúscula
-!        1 = artículo en mayúscula
-! - input: 0 = nombre_link tiene preferencia sobre input_link
-!          1 = input_link tiene preferencia sobre nombre_link
-[ ArticuloPrevio obj art cap;
-  if (obj has proper) rfalse;
-  switch (art) {
-    0: if (cap) PrefaceByArticle(obj, 0, -1);    ! CDefArt(obj);
-       else     PrefaceByArticle(obj, 1, -1);    ! DefArt(obj);
-    1: if (cap) PrefaceByArticle(obj, 2, -1, 1); ! CInDefArt(obj);
-       else     PrefaceByArticle(obj, 2, -1);    ! IndefArt(obj);
-  }
-];
 
 
 [ ComoHablar;
@@ -582,72 +355,6 @@ Object cuarto_katie;
    #ifnot; ! COMPILACION PARA MAQUINA Z
      print (s_bold) text;
    #endif; ! TARGET_
-];
-
-
-[ ImprimirPrompt;
-  if (player ~= selfobj) {
-    glk_set_style(style_User1);
-    print (string) player.short_name;
-    glk_set_style(style_Normal);
-    print " ";
-  }
-  print (s_input) "> ";
-];
-
-
-#ifndef LugarReal;
-[ LugarReal;
-  if (location == thedark) return real_location;
-  else                     return location;
-];
-#endif;
-
-
-! Muestra el nombre del objeto o localidad, con un hipervínculo asociado,
-! con artículo y teniendo preferencia nombre_link sobre input_link:
-! - cap: 0 = artículo en minúscula
-!        1 = artículo en mayúscula
-[ MostrarNombreLink obj cap;
-  ArticuloPrevio(obj, 0, cap);
-  glk_set_hyperlink(obj);
-  MostrarNombre(obj, 2);
-  glk_set_hyperlink(0);
-];
-
-
-! Imprime el nombre de un objeto o localidad:
-! - obj: el objeto o localidad en sí
-! - art: 0 = artículo definido
-!        1 = artículo indefinido
-!        2 = sin artículo
-! - cap: 0 = artículo en minúscula
-!        1 = artículo en mayúscula
-! - input: 0 = nombre_link tiene preferencia sobre input_link
-!          1 = input_link tiene preferencia sobre nombre_link
-[ MostrarNombre obj art cap input
-  ;
-  if (obj ofclass String) {
-    print (string) obj;
-  } else if (obj ofclass Routine) {
-    print (string) obj();
-  } else if (input && obj provides input_link) {
-    ArticuloPrevio(obj, art, cap); PrintOrRun(obj, input_link, 1);
-  } else if ((~~input) && obj provides input_link) {
-    ArticuloPrevio(obj, art, cap); PrintOrRun(obj, input_link, 1);
-  } else if (obj provides name) {
-    ArticuloPrevio(obj, art, cap); print (address) obj.&name-->0;
-  } else if (obj provides name_m) {
-    ArticuloPrevio(obj, art, cap); print (address) obj.&name_m-->0;
-  } else if (obj provides name_f) {
-    ArticuloPrevio(obj, art, cap); print (address) obj.&name_f-->0;
-  } else if (obj provides name_mp) {
-    ArticuloPrevio(obj, art, cap); print (address) obj.&name_mp-->0;
-  } else if (obj provides name_fp) {
-    ArticuloPrevio(obj, art, cap); print (address) obj.&name_fp-->0;
-  } else {
-    ArticuloPrevio(obj, art, cap); PrintAnything(obj);
-  }
 ];
 
 
