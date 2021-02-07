@@ -1,0 +1,38 @@
+Constant Story "RUINAS";
+Constant Headline "^Un ejemplo a seguir^Copyright (c) 2021 Ricardo Pérez.^";
+
+Include "Parser";
+Include "VerbLib";
+
+Object bosque "Bosque Sombrío"
+  with
+    description "En este diminuto claro, la alfombra de agujas de pino se ve
+                 rota por unos escalones tallados en piedra que descienden
+                 hacia la oscuridad. Los oscuros árboles crecen por todos los
+                 lados, el aire está húmedo por la lluvia reciente, las lianas
+                 cuelgan en el aire.",
+  has
+    light;
+
+Object -> seta "seta moteada"
+  with
+    name_m 'hongo' 'moteado' 'venenoso',
+    name_f 'seta' 'moteada' 'venenosa',
+    gender G_FEMENINO,
+    initial "Una seta moteada, con un largo tallo, emerge del suelo empapado.",
+    description "La seta está totalmente cubierta de manchas y no estás muy
+                 seguro de que no sea venenosa.",
+    after [;
+      Take: print "Coges la seta, cortando con cuidado su largo tallo.";
+      Drop: "La seta cae al suelo, ligeramente machacada.";
+    ],
+  has
+    edible;
+
+[ Initialise;
+  location = bosque;
+  "^^^^^Tras días de búsqueda, de sed, de penoso avance a través de la maleza
+  del bosque, al fin tu paciencia se ve recompensada. ¡Has descubierto algo!^";
+];
+
+Include "SpanishG";
