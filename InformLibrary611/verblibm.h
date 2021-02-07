@@ -1538,12 +1538,16 @@ Constant NOARTICLE_BIT  4096;       ! Print no articles, definite or not
 !   Object movement verbs
 ! ----------------------------------------------------------------------------
 
-[ TakeSub;
+[ TakeSub
+    i;
     if (onotheld_mode == 0 || noun notin player)
         if (AttemptToTakeObject(noun)) rtrue;
-    if (AfterRoutines() == 1) rtrue;
+    if (AfterRoutines() == 1) {
+        i = true;
+        if (action == action_to_be) rtrue;
+    }
     notheld_mode = onotheld_mode;
-    if (notheld_mode == 1 || keep_silent == 1) rtrue;
+    if (keep_silent == 1 || i) rtrue;
     L__M(##Take, 1);
 ];
 

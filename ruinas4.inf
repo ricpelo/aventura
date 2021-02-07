@@ -23,7 +23,7 @@ Object -> seta "seta moteada"
     description "La seta está totalmente cubierta de manchas y no estás muy
                  seguro de que no sea venenosa.",
     after [;
-      Take: print "Coges la seta, cortando con cuidado su largo tallo.";
+      Take: "Coges la seta, cortando con cuidado su largo tallo.";
       Drop: "La seta cae al suelo, ligeramente machacada.";
     ],
   has
