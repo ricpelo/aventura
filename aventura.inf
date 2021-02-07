@@ -55,9 +55,6 @@ Constant DEATH_MENTION_UNDO;
 Constant GBOXQUOTE_NOFRAME;
 #endif;
 
-! Si se ha activado el listado automático de salidas:
-Global mostrarSalidas = true;
-
 
 ! ====================================================================
 ! VARIABLES GLOBALES
@@ -68,11 +65,13 @@ Global mostrarSalidas = true;
 ! REPLACES
 ! ====================================================================
 
+
 #ifdef TARGET_GLULX;
 Replace Box__Routine;
 Replace StatusLineHeight;
 Replace DrawStatusLine;
 #endif;
+
 Replace QuitarAcentos;
 
 
@@ -108,8 +107,6 @@ Include "GlulxBox";         ! Usar el comando box con Glulx - gracias a Eliuk
 #endif;
 Include "Contenedor";       ! Contenedores
 Include "EscenarioAbrible"; ! Escenario que se puede abrir y cerrar
-!Include "EventList_NG";     ! Listas de mensajes
-!Include "ExaminarFalso";    ! Poder examinar objetos sólo con su nombre
 Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
 
 
@@ -119,7 +116,6 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
 
 
 [ Initialise;
-!  location = thedark;
 !  dibujarEstado = false;
 
   ! Esto es para que el juego dé siempre la descripción de la habitación, aunque
@@ -140,8 +136,6 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
 
 !  AsignarPersona(PRIMERA_PERSONA + PERSONA_SINGULAR);
 !  give player female;
-
-!  clearTextWindow();
 ];
 
 
@@ -177,6 +171,15 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
   print "| Turnos: ", turns;
   glk_set_window(gg_mainwin);
 ];
+
+
+! Modificado para que no ponga un borde debajo de la línea de estado:
+[ StatusLineHeight hgt parwin;
+  if (gg_statuswin == 0) return;
+  parwin = glk($0029, gg_statuswin); ! window_get_parent
+  glk($0026, parwin, $112, hgt, 0); ! window_set_arrangement
+  gg_statuswin_cursize = hgt;
+];
 #endif;
 
 
@@ -209,17 +212,6 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
 ];
 
 
-#ifdef TARGET_GLULX;
-! Modificado para que no ponga un borde debajo de la línea de estado:
-[ StatusLineHeight hgt parwin;
-  if (gg_statuswin == 0) return;
-  parwin = glk($0029, gg_statuswin); ! window_get_parent
-  glk($0026, parwin, $112, hgt, 0); ! window_set_arrangement
-  gg_statuswin_cursize = hgt;
-];
-#endif;
-
-
 ! Para el Examinar Falso:
 [ UnknownVerb;
   verb_wordnum = 0;
@@ -234,8 +226,6 @@ Include "IntNombre_NG";     ! Poder usar adjetivos como en InformATE
 
 Include "SpanishG";
 
-Include "random";          ! Cambia la función random()
-
 
 !===============================================================================
 ! (7) Clases del Juego
@@ -246,25 +236,23 @@ Class Lugar
   with
     describe [;
       PrintOrRun(self, description);
-      if (mostrarSalidas) {
-        new_line;
-        #ifdef TARGET_GLULX;
-            glk_set_style(style_Emphasized);
-        #ifnot;
-            style bold;
-        #endif;
-        <Salidas>;
-        #ifdef TARGET_GLULX;
-            glk_set_style(style_Normal);
-        #ifnot;
-            style roman;
-        #endif;
-        rtrue;
-      }
+      new_line;
+      #ifdef TARGET_GLULX;
+      glk_set_style(style_Emphasized);
+      #ifnot;
+      style bold;
+      #endif;
+      <Salidas>;
+      #ifdef TARGET_GLULX;
+      glk_set_style(style_Normal);
+      #ifnot;
+      style roman;
+      #endif;
+      rtrue;
     ],
     number,                           ! Necesario en varias librerías
   has
-    scenery light;
+    light;
 
 
 !===============================================================================
@@ -285,32 +273,10 @@ Object cuarto_katie;
 !-------------------------------------------------------------------------------
 
 
-#ifdef DEBUG;
-! En modo depuración podemos saltarnos la espera pulsando una tecla:
-[ WaitDelay delay;
-  return KeyDelay(delay);
-];
-#endif;
-
-
 [ ComoHablar;
   print_ret "[Para hablar con un personaje, usa la forma ~",
             (s_input) "PERSONAJE, lo que sea", "~. Por ejemplo: ~",
             (s_input) "JASON, QUÉ OPINAS DE MADRE", "~.]";
-];
-
-
-! Text in Emphasized style
-[ s_emph text;
-   #ifdef TARGET_GLULX;
-     glk_set_style(style_Emphasized);
-     print (string) text;
-     glk_set_style(style_Normal);
-   #ifnot; ! COMPILACION PARA MAQUINA Z
-     style bold;
-     print (string) text;
-     style roman;
-   #endif; ! TARGET_
 ];
 
 
@@ -326,38 +292,6 @@ Object cuarto_katie;
 ];
 
 
-! Text in Bold style (like Inform)
-[ s_bold text;
-    print (s_emph) text;
-];
-
-
-! Text in Preformatted style
-[ s_pref text;
-   #ifdef TARGET_GLULX;
-     glk_set_style(style_Preformatted);
-     print (string) text;
-     glk_set_style(style_Normal);
-   #ifnot; ! COMPILACION PARA MAQUINA Z
-     font off;
-     print (string) text;
-     font on;
-   #endif; ! TARGET_
-];
-
-
-! Text in Header style
-[ s_head text;
-   #ifdef TARGET_GLULX;
-     glk_set_style(style_Header);
-     print (string) text;
-     glk_set_style(style_Normal);
-   #ifnot; ! COMPILACION PARA MAQUINA Z
-     print (s_bold) text;
-   #endif; ! TARGET_
-];
-
-
 !===============================================================================
 ! (10) Verbos y Gramaticas Propias del Juego
 !-------------------------------------------------------------------------------
@@ -367,9 +301,6 @@ Verb meta 'ayuda'
   *                 -> Ayuda;
 
 Verb 'chilla' = 'grita';
-
-Verb meta 'creditos'
-  *                 -> Creditos;
 
 Verb 'cuentale' = 'cuenta';
 
@@ -431,14 +362,6 @@ Verb 'ven'
   * 'aqui'           -> Venir
   * 'conmigo'        -> Venir;
 
-#ifdef DEBUG;
-Verb meta 't'
-  *                    -> TestPasoAPaso;
-
-Verb meta 'tt'
-  *                    -> TestContinuar;
-#endif;
-
 
 !===============================================================================
 ! (11) Rutinas de Acciones Propias del Juego
@@ -446,60 +369,7 @@ Verb meta 'tt'
 
 
 [ AyudaSub;
-  print "Prueba a pedir ayuda a alguien. Si necesitas pistas más elaboradas,
-         puedes usar el sistema de pistas interactivas tecleando el comando ",
-         (s_input) "PISTAS", ".^";
-];
-
-
-[ CreditosSub;
-  print (s_head) "^@<<MOMENTUM@>>", " --- (c) 2012 Alpha Aventuras^^";
-  print (s_bold) "-- PROGRAMACIÓN Y DISEÑO:^";
-  print "    Ricardo Pérez López^^";
-  print (s_bold) "-- GRÁFICOS:^";
-  print "    Manuel Millán Ruiz^^";
-  print (s_bold) "-- TEXTOS:^";
-  print "    Ricardo Pérez López^^";
-  print (s_bold) "-- MAPEADO Y DOCUMENTACIÓN:^";
-  print "    Ricardo Pérez López^";
-  print "    Antonio Matiola Ortiz^^";
-  print (s_bold) "-- PRUEBAS:^";
-  print "    Ricardo Pérez López^";
-  print "    Manuel Millán Ruiz^^";
-  KeyDelay();
-  print "Desarrollado usando el lenguaje Inform, de Graham Nelson,
-         con ayuda de las siguientes librerías:^^";
-  print "- INFSP6 (fix), de Sarganar et al.^";
-  print "- Adaptación de SGW+DMX, de Eliuk Blau^";
-  print "- Damusix, de Eliuk Blau^";
-  print "- PNJactor_NG y PNJacciones_NG (adaptaciones de los originales de Zak
-           y Carlos)^";
-  print "- Moviles_NG (adaptación de Moviles, de Mel Hython)^";
-  print "- PNJpuertas_NG (Adaptación de PnjPuertas, de Jaevius)^";
-  print "- Decir, de Zak^";
-  print "- Etemas, de Zak^";
-  print "- Decorado_NG (adaptación de Decorado, de Zak y Mel Hython)^";
-  print "- Adaptación de Barra, de Presi^";
-  print "- Adaptación de ZIPI, de Zak^";
-  print "- Timer, de Sothoth";
-  KeyDelay();
-  print "^^Basado en la novela @<<Ringu@>> de Koji Suzuki y el film
-         @<<The Ring@>> (c) 2002 Dreamworks SKG.";
-  print "^^Nuestro agradecimiento a todos los integrantes del CAAD que nos han
-         ayudado, directa o indirectamente, en el desarrollo de esta aventura.^^
-         (c) 2012 Alpha Aventuras^^
-         Este programa es software libre, publicado bajo la licencia GNU GPL v3.
-         El texto completo de la licencia se encuentra en la siguiente
-         dirección:^^";
-  print (s_pref) "http://www.gnu.org/licenses/gpl.txt^";
-  print "^El código fuente del programa está disponible en Github:^^";
-  print (s_pref) "https://bitbucket.com/ricpelo/momentum^";
-  KeyDelay();
-  print "^Visítanos en:^^";
-  print (s_pref) "http://www.alpha-aventuras.es^
-        http://wiki.caad.es/Alpha_Aventuras^
-        http://www.facebook.com/alphaaventuras^";
-  KeyDelay();
+  "Prueba a pedir ayuda a alguien.";
 ];
 
 
@@ -549,15 +419,3 @@ Verb meta 'tt'
 [ VenirSub;
   <<Seguir player>>;
 ];
-
-
-#ifdef DEBUG;
-[ TestPasoAPasoSub;
-  test_machine.run_once();
-];
-
-
-[ TestContinuarSub;
-  test_machine.run();
-];
-#endif;
