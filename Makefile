@@ -1,28 +1,21 @@
-.PHONY: compilar compilar-glulxe jugar jugar-glulxe
-
 CC=Inform6/inform
 FLAGS=+language_name=Spanish +include_path=,lib,INFSP6,InformLibrary611,Alpha_pack
+SRCDIR=.
+BUILDDIR_Z5=.
+BUILDDIR_ULX=.
 
-aventura.z5: aventura.inf
+SOURCES     := $(shell find $(SRCDIR) -maxdepth 1 -type f -name "*.inf")
+OBJECTS_Z5  := $(patsubst $(SRCDIR)/%,$(BUILDDIR_Z5)/%,$(SOURCES:.inf=.z5))
+OBJECTS_ULX := $(patsubst $(SRCDIR)/%,$(BUILDDIR_ULX)/%,$(SOURCES:.inf=.ulx))
+
+all: z5 ulx
+
+z5: $(OBJECTS_Z5)
+
+ulx: $(OBJECTS_ULX)
+
+$(BUILDDIR_Z5)/%.z5: $(SRCDIR)/%.inf
 	$(CC) $< $(FLAGS)
 
-aventura.ulx: aventura.inf
+$(BUILDDIR_ULX)/%.ulx: $(SRCDIR)/%.inf
 	$(CC) $< $(FLAGS) -G
-
-ruinas.z5: ruinas.inf
-	$(CC) $< $(FLAGS)
-
-ruinas.ulx: ruinas.inf
-	$(CC) $< $(FLAGS) -G
-
-compilar:
-	Inform6/inform aventura.inf +language_name=Spanish +include_path=,lib,INFSP6,InformLibrary611,Alpha_pack
-
-compilar-glulxe:
-	Inform6/inform aventura.inf -G +language_name=Spanish +include_path=,lib,INFSP6,InformLibrary611,Alpha_pack
-
-jugar:
-	gargoyle-free aventura.z5
-
-jugar-glulxe:
-	gargoyle-free aventura.ulx
