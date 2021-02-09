@@ -1,15 +1,15 @@
 Constant Story "RUINAS";
-Constant Headline "^Un ejemplo a seguir^Copyright (c) 2021 Ricardo Pérez.^";
+Constant Headline "^Un ejemplo a seguir^Copyright (c) 2021 Ricardo PÃ©rez.^";
 
 Include "Parser";
 Include "VerbLib";
 
-Object bosque "Bosque Sombrío"
+Object bosque "Bosque SombrÃ­o"
   with
     description "En este diminuto claro, la alfombra de agujas de pino se ve
                  rota por unos escalones tallados en piedra que descienden
-                 hacia la oscuridad. Los oscuros árboles crecen por todos los
-                 lados, el aire está húmedo por la lluvia reciente, las lianas
+                 hacia la oscuridad. Los oscuros Ã¡rboles crecen por todos los
+                 lados, el aire estÃ¡ hÃºmedo por la lluvia reciente, las lianas
                  cuelgan en el aire.",
   has
     light;
@@ -20,15 +20,15 @@ Object -> seta "seta moteada"
     name_f 'seta' 'moteada' 'venenosa',
     gender G_FEMENINO,
     initial "Una seta moteada, con un largo tallo, emerge del suelo empapado.",
-    description "La seta está totalmente cubierta de manchas y no estás muy
+    description "La seta estÃ¡ totalmente cubierta de manchas y no estÃ¡s muy
                  seguro de que no sea venenosa.",
   has
     edible;
 
 [ Initialise;
   location = bosque;
-  "^^^^^Tras días de búsqueda, de sed, de penoso avance a través de la maleza
-  del bosque, al fin tu paciencia se ve recompensada. ¡Has descubierto algo!^";
+  "^^^^^Tras dÃ­as de bÃºsqueda, de sed, de penoso avance a travÃ©s de la maleza
+  del bosque, al fin tu paciencia se ve recompensada. Â¡Has descubierto algo!^";
 ];
 
 Include "SpanishG";

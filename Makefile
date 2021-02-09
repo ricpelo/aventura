@@ -1,5 +1,5 @@
 CC=Inform6/inform
-FLAGS=+language_name=Spanish +include_path=,lib,INFSP6,InformLibrary611,Alpha_pack
+FLAGS=-Cu +language_name=Spanish +include_path=,lib,INFSP6,InformLibrary611,Alpha_pack
 SRCDIR=.
 BUILDDIR_Z5=.
 BUILDDIR_ULX=.

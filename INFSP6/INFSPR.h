@@ -44,11 +44,11 @@
 
 
 ! Tremendo bug corregido. Antes usaba el buffer buf2, el cual usa
-! tambien el parser para leer commandos incompletos del estilo de "¿a
+! tambien el parser para leer commandos incompletos del estilo de "Â¿a
 ! cual te refieres exactamente?"
 ! Este bug estaba en la libreria original, pero nunca aparecia porque
 ! apenas se usa DictionaryLookup. En cambio InformATE lo usa para
-! comprobar si quitando la R a un verbo se obtiene una palabra válida.
+! comprobar si quitando la R a un verbo se obtiene una palabra vÃ¡lida.
 !
 ! [Gracias a Presi por detectarlo]
 !
@@ -76,7 +76,7 @@
                   ImprimeTodoElBuffer(bufferaux);
                 print "|^";
             }
-  Tokenise__(bufferaux,parseaux); ! procesar texto de bufferaux, el resultado está en parseaux-->1
+  Tokenise__(bufferaux,parseaux); ! procesar texto de bufferaux, el resultado estÃ¡ en parseaux-->1
   return parseaux-->1; ! retornar address del token encontrado (-1 si falla)
 ];
 
@@ -89,8 +89,8 @@
 !  It returns -1 if there are no possible choices.
 ! ----------------------------------------------------------------------------
 
-! Modificada en la revisión [020415] de modo que si hay varios objetos con la
-! mayor puntuación, se elija uno de ellos al azar, en vez de elegir siempre al
+! Modificada en la revisiÃ³n [020415] de modo que si hay varios objetos con la
+! mayor puntuaciÃ³n, se elija uno de ellos al azar, en vez de elegir siempre al
 ! primero. Solo usado en I6. I7 usa uno mas elaborado.
 #ifdef INFSPR_adv;Message "   Incluyendo reemplazo BestGuess"; #endif;
 [ BestGuess  earliest its_score best i mejores aleat j;
@@ -146,10 +146,10 @@
 !  each other by anything the player can type.  If not, it returns true.
 ! ----------------------------------------------------------------------------
 
-! Modificado en la versión [020423] para comparar además de name, las otras
-! propiedades de la librería española InformATE! que sirven también para nombrar
+! Modificado en la versiÃ³n [020423] para comparar ademÃ¡s de name, las otras
+! propiedades de la librerÃ­a espaÃ±ola InformATE! que sirven tambiÃ©n para nombrar
 ! los objetos: name_f, name_fp, name_mp y adjectives. Si se programan bien
-! los juegos, con esto se puede solucionar el problema de la desambiguación.
+! los juegos, con esto se puede solucionar el problema de la desambiguaciÃ³n.
 #ifdef INFSPR_adv;Message "   Incluyendo reemplazo Identical"; #endif;
 [ Identical o1 o2 p1 p2 n1 n2 i j flag pasada;
 
@@ -180,18 +180,18 @@
 !  "name" (i.e. property no. 1) properties.  (Note that the following allows
 !  for repeated words and words in different orders.)
 
-!  p1 = o1.&1; n1 = (o1.#1)/WORDSIZE;  ! Para mí, referirse a una propiedad
-!  p2 = o2.&1; n2 = (o2.#1)/WORDSIZE;  ! con un número es una burrada
+!  p1 = o1.&1; n1 = (o1.#1)/WORDSIZE;  ! Para mÃ­, referirse a una propiedad
+!  p2 = o2.&1; n2 = (o2.#1)/WORDSIZE;  ! con un nÃºmero es una burrada
 
-! ¿TODO? OJO: Este método compara si cada una de las propiedades de names y
-! demás a buscar tiene las mismas palabras, pero entre ellas mismas (esto es,
-! por ejemplo entre adjetivos de o1 y de o2), no entre sí (como, por ejemplo,
+! Â¿TODO? OJO: Este mÃ©todo compara si cada una de las propiedades de names y
+! demÃ¡s a buscar tiene las mismas palabras, pero entre ellas mismas (esto es,
+! por ejemplo entre adjetivos de o1 y de o2), no entre sÃ­ (como, por ejemplo,
 ! entre las de name de o1 y adjetivos de o2).
 !
 ! Posiblemente lo ideal fuera mirar si todas las palabras de todas estas
-! propiedades de o1 están en las propiedades de o2 y viceversa.
+! propiedades de o1 estÃ¡n en las propiedades de o2 y viceversa.
 
-! pasada almacenará el número de pasada por el que se va, para saber si toca
+! pasada almacenarÃ¡ el nÃºmero de pasada por el que se va, para saber si toca
 ! comparar name(1), adjetivos(2), name_f(3), name_mp(4) o name_fp(5)  
 
   for (pasada = 1: pasada < 6: pasada++) {
@@ -452,7 +452,7 @@
 [ NounDomain	domain1 domain2 context    first_word i j k l
                                         answer_words marker;
     marker = marker; ! [infsp] para evitar el warning de variable no usada.
-                     !         no se usa en I6 pero por ahora sí en I7
+                     !         no se usa en I6 pero por ahora sÃ­ en I7
     #Ifdef DEBUG;
     if (parser_trace >= 4) {
         print "   [NounDomain called at word ", wn, "^";
@@ -778,7 +778,7 @@
 
 
 ! #############################################################################
-! [infsp] Indefart: se agregó el "a " en caso de nombre propio " a Mamá"
+! [infsp] Indefart: se agregÃ³ el "a " en caso de nombre propio " a MamÃ¡"
 #ifdef INFSPR_adv;Message "   Incluyendo reemplazo Indefart"; #endif;
 [ Indefart o i; ! funcion (a)
     if (o == 0) { print (string) NOTHING__TX; rtrue; }
@@ -1264,7 +1264,7 @@
 
             if (line_ttype-->pcount == ELEMENTARY_TT) {
                 if (line_tdata-->pcount == MULTI_TOKEN) m = true;
-                ! [001115] Añadida la comprobación MULTIHELD_TOKEN
+                ! [001115] AÃ±adida la comprobaciÃ³n MULTIHELD_TOKEN
                 ! para capturar correctamente el caso DEJA TODO
                 if (line_tdata-->pcount == MULTIHELD_TOKEN) {
                     m = true;
