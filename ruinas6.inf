@@ -26,15 +26,14 @@ Object -> seta "seta moteada"
     description "La seta está totalmente cubierta de manchas y no estás muy
                  seguro de que no sea venenosa.",
     before [;
-         Eat:
-            if (random(100) <= 30) {
-                deadflag = 1;
-                "Basta con un diminuto bocado. Era una seta venenosa ¡Y ya ha
-                envenenado a alguien!";
-            }
-            "Mordisqueas una esquina, pero tiene un sabor curioso que te
-            repele.";
-        ],
+      Eat:
+        if (random(100) <= 30) {
+          deadflag = 1;
+          "Basta con un diminuto bocado. Era una seta venenosa ¡Y ya ha
+           envenenado a alguien!";
+        }
+        "Mordisqueas una esquina, pero tiene un sabor curioso que te repele.";
+    ],
     after [;
       Take: "Coges la seta, cortando con cuidado su largo tallo.";
       Drop: "La seta cae al suelo, ligeramente machacada.";
@@ -52,7 +51,7 @@ Object interior "El interior"
 
 [ Initialise;
   location = bosque;
-!  lookmode = 2;
+  lookmode = 2;
   "^^^^^Tras días de búsqueda, de sed, de penoso avance a través de la maleza
   del bosque, al fin tu paciencia se ve recompensada. ¡Has descubierto algo!^";
 ];
