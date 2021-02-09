@@ -1,3 +1,5 @@
+.PHONY: all z5 ulx
+
 CC=Inform6/inform
 FLAGS=-Cu +language_name=Spanish +include_path=,lib,INFSP6,InformLibrary611,Alpha_pack
 SRCDIR=.
